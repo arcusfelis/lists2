@@ -2,6 +2,8 @@
 
 -export([ukeysublist/3]).
 
+
+%% @doc `TupleList1' and `TupleList2' are returned by `lists:ukeysort(N, _)'.
 -spec ukeysublist(N, TupleList1, TupleList2) ->
     TupleList3 when
     N :: non_neg_integer(),
@@ -24,7 +26,12 @@ ukeysublist(_N, L1, _L2) ->
 
 ukeysublist_test_() ->
     [?_assertEqual(ukeysublist(1, [{1}, {2}, {3}], [{2}]),
-                   [{1}, {3}])].
+                   [{1}, {3}])
+    ,?_assertEqual(ukeysublist(1, [{1}, {2}, {3}], [{0}, {4}]),
+                   [{1}, {2}, {3}])
+    ,?_assertEqual(ukeysublist(1, [{1}, {2}, {3}], [{0}, {1}, {3}, {4}]),
+                   [{2}])
+    ].
 
 -endif.
 
