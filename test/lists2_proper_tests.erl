@@ -14,7 +14,7 @@
 
 %% Test the group_with function.
 prop_group_with() ->
-    ?FORALL(Result, [{unique(term()), non_empty([term()])}],
+    ?FORALL(Result, non_empty_list({unique(term()), non_empty_list(term())}),
         begin
         %% Sorted by key, add the key as a part of the body
         SortedData    = lists:flatmap(fun flatten_prop_group_result/1, Result),

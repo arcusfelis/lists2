@@ -73,12 +73,13 @@ group_with(KeyMaker, List) ->
 %% @end
 %%
 %% Still the same group:
+%% group_reduce([{<<"user">>,{x_prefix_name,user,65,true,true,true}}],<<"author">>,[{x_prefix_name,author,65,true,false,true}])
 group_reduce([{Key, Val}|T], Key, Vals) ->
     group_reduce(T, Key, [Val|Vals]);
 
 %% Add a new group:
-group_reduce([{Key, Val}|T], Key, Vals) ->
-    [{Key, lists:reverse(Vals)} | group_reduce(T, Key, [Val])];
+group_reduce([{NewKey, Val}|T], OldKey, Vals) ->
+    [{OldKey, lists:reverse(Vals)} | group_reduce(T, NewKey, [Val])];
 
 group_reduce([], Key, Vals) ->
     [{Key, lists:reverse(Vals)}].
