@@ -1,0 +1,7 @@
+{application, lists2,
+ [
+  {description, ""},
+  {vsn, git},
+  {registered, []},
+  {env, []}
+ ]}.
