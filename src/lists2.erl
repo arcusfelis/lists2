@@ -57,10 +57,10 @@ enumerate([], _N) ->
 %% @doc Looks like `GROUP BY KeyMaker(List)` in SQL.
 -spec group_with(fun(), list()) -> list({term(),list()}).
 
-group_with([], _keymaker) ->
+group_with(_keymaker, []) ->
     [];
 
-group_with(List, KeyMaker) ->
+group_with(KeyMaker, List) ->
     %% Map
     Mapped = [{KeyMaker(X), X} || X <- List],
     [{SortedHKey, SortedHValue}|SortedT] = lists:keysort(1, Mapped),

@@ -20,7 +20,8 @@ prop_group_with() ->
         SortedData    = lists:flatmap(fun flatten_prop_group_result/1, Result),
         ResultPlusKey = lists:map(fun result_plus_key/1, Result),
         RandomData = lists2:shuffle(SortedData),
-        equals(lists2:group_with(RandomData, fun key_maker_prop_group_with/1), ResultPlusKey)
+        equals(lists2:group_with(fun key_maker_prop_group_with/1, RandomData), 
+               ResultPlusKey)
         end).
 
 
