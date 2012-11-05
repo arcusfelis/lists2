@@ -21,6 +21,25 @@ ukeysublist(N, [H1|T1]=L1, [H2|T2]=L2) ->
 ukeysublist(_N, L1, _L2) ->
     L1.
 
+
+-spec ukeysublist(N1, TupleList1, N2, TupleList2) ->
+    TupleList3 when
+    N1 :: non_neg_integer(),
+    N2 :: non_neg_integer(),
+    TupleList2 :: TupleList1,
+    TupleList3 :: TupleList1,
+    TupleList1 :: [tuple()].
+
+ukeysublist(N1, [H1|T1]=L1, N2, [H2|T2]=L2) ->
+    E1 = element(N1, H1),
+    E2 = element(N2, H2),
+    if E1 < E2 -> [H1|ukeysublist(N1, T1, N2, L2)];
+       E1 > E2 -> ukeysublist(N1, L1, N2, T2);
+       true    -> ukeysublist(N1, T1, N2, T2)
+    end;
+ukeysublist(_N1, L1, _N2, _L2) ->
+    L1.
+
 -ifdef(TEST).
 -include_lib("eunit/include/eunit.hrl").
 
@@ -30,6 +49,15 @@ ukeysublist_test_() ->
     ,?_assertEqual(ukeysublist(1, [{1}, {2}, {3}], [{0}, {4}]),
                    [{1}, {2}, {3}])
     ,?_assertEqual(ukeysublist(1, [{1}, {2}, {3}], [{0}, {1}, {3}, {4}]),
+                   [{2}])
+    ].
+
+ukeysublist4_test_() ->
+    [?_assertEqual(ukeysublist(1, [{1}, {2}, {3}], 1, [{2}]),
+                   [{1}, {3}])
+    ,?_assertEqual(ukeysublist(1, [{1}, {2}, {3}], 1, [{0}, {4}]),
+                   [{1}, {2}, {3}])
+    ,?_assertEqual(ukeysublist(1, [{1}, {2}, {3}], 1, [{0}, {1}, {3}, {4}]),
                    [{2}])
     ].
 
