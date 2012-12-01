@@ -1,6 +1,14 @@
 -module(lists2).
 
--export([ukeysublist/3, unique/1, group_with/2, keys/2, shuffle/1]).
+-export([ukeysublist/3,
+         ukeysublist/4,
+         unique/1,
+         group_with/2,
+         group_by/2,
+         keys/2,
+         shuffle/1,
+         enumerate/1,
+         enumerate/2]).
 
 
 %% @doc `TupleList1' and `TupleList2' are returned by `lists:ukeysort(N, _)'.
@@ -95,6 +103,20 @@ group_with(KeyMaker, List) ->
 
     %% Reduce
     group_reduce(SortedT, SortedHKey, [SortedHValue]).
+
+
+
+%% @doc Group tuples, using a value of field `N' as a key.
+group_by(_N, []) ->
+    [];
+
+group_by(N, List) ->
+    %% Map
+    [SortedH|SortedT] = lists:keysort(N, List),
+    SortedHKey = element(N, SortedH),
+
+    %% Reduce
+    group_reduce(N, SortedT, SortedHKey, [SortedH]).
     
 
 %% @doc Return `[{Key, [Value1, Value2, ...]}]'.
@@ -102,6 +124,8 @@ group_with(KeyMaker, List) ->
 %%
 %% Still the same group:
 %% group_reduce([{<<"user">>,{x_prefix_name,user,65,true,true,true}}],<<"author">>,[{x_prefix_name,author,65,true,false,true}])
+%%
+%% Version for ppairs.
 group_reduce([{Key, Val}|T], Key, Vals) ->
     group_reduce(T, Key, [Val|Vals]);
 
@@ -112,6 +136,22 @@ group_reduce([{NewKey, Val}|T], OldKey, Vals) ->
 group_reduce([], Key, Vals) ->
     [{Key, lists:reverse(Vals)}].
 
+
+
+%% @doc Genaralized version.
+%%
+%% @end
+%% Still the same group:
+group_reduce(N, [H|T], Key, Acc) when element(N, H) =:= Key ->
+    group_reduce(N, T, Key, [H|Acc]);
+
+%% Add a new group:
+group_reduce(N, [H|T], Key, Acc) ->
+    [{Key, lists:reverse(Acc)} | group_reduce(N, T, element(N, H), [H])];
+
+group_reduce(_N, [], Key, Acc) ->
+    [{Key, lists:reverse(Acc)}].
+    
 
 %% group_with end
 
@@ -125,3 +165,5 @@ shuffle(List) ->
     WithKey = [ {random:uniform(), X} || X <- List ],
     Sorted  = lists:keysort(1, WithKey),
     keys(2, Sorted).
+
+
