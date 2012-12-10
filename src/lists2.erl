@@ -1,36 +1,41 @@
 -module(lists2).
 
--export([ukeysublist/3,
-         ukeysublist/4,
+-export([ordkeysublist/3,
+         ordkeysublist/4,
          unique/1,
          group_with/2,
+         group_count_with/2,
          group_by/2,
          keys/2,
          shuffle/1,
          enumerate/1,
-         enumerate/2]).
+         enumerate/2,
+         filter_head/2]).
 
 
-%% @doc `TupleList1' and `TupleList2' are returned by `lists:ukeysort(N, _)'.
--spec ukeysublist(N, TupleList1, TupleList2) ->
+%% @doc It is like `lists:sublist/1', BUT uses a tuple field for comparation.
+%% `TupleList1' and `TupleList2' must be sorted, for example, 
+%% with `lists:ukeysort(N, _)'.
+-spec ordkeysublist(N, TupleList1, TupleList2) ->
     TupleList3 when
     N :: non_neg_integer(),
     TupleList2 :: TupleList1,
     TupleList3 :: TupleList1,
     TupleList1 :: [tuple()].
 
-ukeysublist(N, [H1|T1]=L1, [H2|T2]=L2) ->
+ordkeysublist(N, [H1|T1]=L1, [H2|T2]=L2) ->
     E1 = element(N, H1),
     E2 = element(N, H2),
-    if E1 < E2 -> [H1|ukeysublist(N, T1, L2)];
-       E1 > E2 -> ukeysublist(N, L1, T2);
-       true    -> ukeysublist(N, T1, T2)
+    if E1 < E2 -> [H1|ordkeysublist(N, T1, L2)];
+       E1 > E2 -> ordkeysublist(N, L1, T2);
+       true    -> ordkeysublist(N, T1, T2)
     end;
-ukeysublist(_N, L1, _L2) ->
+ordkeysublist(_N, L1, _L2) ->
     L1.
 
 
--spec ukeysublist(N1, TupleList1, N2, TupleList2) ->
+%% @doc It is a variant of `ordkeysublist/3', that uses different field positions.
+-spec ordkeysublist(N1, TupleList1, N2, TupleList2) ->
     TupleList3 when
     N1 :: non_neg_integer(),
     N2 :: non_neg_integer(),
@@ -38,35 +43,37 @@ ukeysublist(_N, L1, _L2) ->
     TupleList3 :: TupleList1,
     TupleList1 :: [tuple()].
 
-ukeysublist(N1, [H1|T1]=L1, N2, [H2|T2]=L2) ->
+ordkeysublist(N1, [H1|T1]=L1, N2, [H2|T2]=L2) ->
     E1 = element(N1, H1),
     E2 = element(N2, H2),
-    if E1 < E2 -> [H1|ukeysublist(N1, T1, N2, L2)];
-       E1 > E2 -> ukeysublist(N1, L1, N2, T2);
-       true    -> ukeysublist(N1, T1, N2, T2)
+    if E1 < E2 -> [H1|ordkeysublist(N1, T1, N2, L2)];
+       E1 > E2 -> ordkeysublist(N1, L1, N2, T2);
+       true    -> ordkeysublist(N1, T1, N2, T2)
     end;
-ukeysublist(_N1, L1, _N2, _L2) ->
+ordkeysublist(_N1, L1, _N2, _L2) ->
     L1.
 
 -ifdef(TEST).
 -include_lib("eunit/include/eunit.hrl").
 
-ukeysublist_test_() ->
-    [?_assertEqual(ukeysublist(1, [{1}, {2}, {3}], [{2}]),
+ordkeysublist_test_() ->
+    [?_assertEqual(ordkeysublist(1, [{1}, {2}, {3}], [{2}]),
                    [{1}, {3}])
-    ,?_assertEqual(ukeysublist(1, [{1}, {2}, {3}], [{0}, {4}]),
+    ,?_assertEqual(ordkeysublist(1, [{1}, {2}, {3}], [{0}, {4}]),
                    [{1}, {2}, {3}])
-    ,?_assertEqual(ukeysublist(1, [{1}, {2}, {3}], [{0}, {1}, {3}, {4}]),
+    ,?_assertEqual(ordkeysublist(1, [{1}, {2}, {3}], [{0}, {1}, {3}, {4}]),
                    [{2}])
     ].
 
-ukeysublist4_test_() ->
-    [?_assertEqual(ukeysublist(1, [{1}, {2}, {3}], 1, [{2}]),
+ordkeysublist4_test_() ->
+    [?_assertEqual(ordkeysublist(1, [{1}, {2}, {3}], 1, [{2}]),
                    [{1}, {3}])
-    ,?_assertEqual(ukeysublist(1, [{1}, {2}, {3}], 1, [{0}, {4}]),
+    ,?_assertEqual(ordkeysublist(1, [{1}, {2}, {3}], 1, [{0}, {4}]),
                    [{1}, {2}, {3}])
-    ,?_assertEqual(ukeysublist(1, [{1}, {2}, {3}], 1, [{0}, {1}, {3}, {4}]),
+    ,?_assertEqual(ordkeysublist(1, [{1}, {2}, {3}], 1, [{0}, {1}, {3}, {4}]),
                    [{2}])
+    ,?_assertEqual(ordkeysublist(1, [{1}, {1}, {2}, {3}], 1, [{0}, {1}, {3}, {4}]),
+                   [{1}, {2}])
     ].
 
 -endif.
@@ -91,6 +98,8 @@ enumerate([], _N) ->
 
 
 %% @doc Looks like `GROUP BY KeyMaker(List)` in SQL.
+%% Returns a list of `{Key, GroupOfElements}'.
+%% `GroupOfElements' contains all elements of lists for each `Key = KeyMaker(_)'.
 -spec group_with(fun(), list()) -> list({term(),list()}).
 
 group_with(_keymaker, []) ->
@@ -103,6 +112,34 @@ group_with(KeyMaker, List) ->
 
     %% Reduce
     group_reduce(SortedT, SortedHKey, [SortedHValue]).
+
+
+%% @doc Calculates how many elements are with the same key.
+%% It is the same as 
+%%      `[{K, length(L)} || {K, L} <- group_with(KeyMaker, List)]'.
+-spec group_count_with(fun(), list()) -> list({term(),non_neg_integer()}).
+
+group_count_with(_keymaker, []) ->
+    [];
+
+group_count_with(KeyMaker, List) ->
+    %% Map
+    Mapped = [KeyMaker(X) || X <- List],
+    SortedMapped = lists:sort(Mapped),
+    count_sorted_clusters(SortedMapped).
+
+count_sorted_clusters([H|T]) ->
+    count_sorted_clusters(T, H, 1);
+count_sorted_clusters([]) ->
+    [].
+
+count_sorted_clusters([H|T], H, N) ->
+    count_sorted_clusters(T, H, N+1);
+count_sorted_clusters([H|T], K, N) ->
+    [{K,N}|count_sorted_clusters(T, H, 1)];
+count_sorted_clusters([], H, N) ->
+    [{H,N}].
+
 
 
 
@@ -166,4 +203,17 @@ shuffle(List) ->
     Sorted  = lists:keysort(1, WithKey),
     keys(2, Sorted).
 
+
+%% @doc This call is equal to 
+%% `hd(lists:filter(F, L))'.
+-spec filter_head(F, L) -> E when
+    L :: [E],
+    F :: fun((E) -> boolean()),
+    E :: term().
+
+filter_head(F, [H|T]) ->
+    case F(H) of
+        true -> H;
+        false -> filter_head(F, T)
+    end.
 
