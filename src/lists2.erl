@@ -5,12 +5,16 @@
          unique/1,
          group_with/2,
          group_count_with/2,
+         seq_group_with/2,
          group_by/2,
          keys/2,
          shuffle/1,
          enumerate/1,
          enumerate/2,
-         filter_head/2]).
+         filter_head/2,
+         cmap/2,
+         cmap/3,
+         collate_with/2]).
 
 
 %% @doc It is like `lists:sublist/1', BUT uses a tuple field for comparation.
@@ -100,6 +104,13 @@ enumerate([], _N) ->
 %% @doc Looks like `GROUP BY KeyMaker(List)` in SQL.
 %% Returns a list of `{Key, GroupOfElements}'.
 %% `GroupOfElements' contains all elements of lists for each `Key = KeyMaker(_)'.
+%%
+%% For example:
+%%
+%% ```
+%% group_with(fun(X) -> X rem 2 end, [1,2,4,5,3]).
+%% [{0, [2, 4]}, {1, [1, 3, 5]}]
+%% '''
 -spec group_with(fun(), list()) -> list({term(),list()}).
 
 group_with(_keymaker, []) ->
@@ -217,3 +228,48 @@ filter_head(F, [H|T]) ->
         false -> filter_head(F, T)
     end.
 
+
+%% @doc Map with a counter.
+%%
+%% Call  `F(X, C)' for each element in `Xs', where `X' is an element and 
+%% `C' is a counter from 1 to `length(Xs)'.
+%% @end
+cmap(F, Xs) ->
+    cmap(F, Xs, 1).
+
+
+cmap(F, [X|Xs], C) ->
+    [F(X, C)|cmap(F, Xs, C+1)];
+
+cmap(_F, [], _C) ->
+    [].
+
+
+%% @doc Split a list into a list of sequencies using a key maker.
+%% For example:
+%%
+%% ```
+%% lists2:seq_group_with(fun(X) -> X rem 2 end, [2,2,4,1,3,4]).
+%% [{0, [2,2,4]}, {1, [1,3]}, {0,[4]}
+%% '''
+seq_group_with(KeyMaker, [H|T]) ->
+    Key = KeyMaker(H),
+    %% Acc stores elements of the group.
+    Acc = [H],
+    seq_group_with2(KeyMaker, T, Key, Acc).
+
+seq_group_with2(KeyMaker, [H|T], Key, Acc) ->
+    case KeyMaker(H) of
+        Key -> 
+            seq_group_with2(KeyMaker, T, Key, [H|Acc]);
+        NewKey -> 
+            [{Key, lists:reverse(Acc)} 
+            | seq_group_with2(KeyMaker, T, NewKey, [H])]
+    end;
+seq_group_with2(_KeyMaker, [], Key, Acc) ->
+    [{Key, lists:reverse(Acc)}].
+
+
+
+collate_with(KeyMaker, List) ->
+    lists:sort(fun(X, Y) -> KeyMaker(X) < KeyMaker(Y) end, List).

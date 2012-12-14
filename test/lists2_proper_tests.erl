@@ -32,3 +32,9 @@ run_property_testing_test() ->
     Res = proper:module(?MODULE, [{constraint_tries, 500}]),
     erlang:group_leader(EunitLeader, self()),
     ?assertEqual([], Res). 
+
+
+group_with_test_() ->
+    [?_assertEqual(lists2:group_with(fun(X) -> X rem 2 end, [1,2,4,5,3]),
+                                     [{0, [2, 4]}, {1, [1, 5, 3]}])
+    ].
