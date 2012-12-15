@@ -14,7 +14,8 @@
          filter_head/2,
          cmap/2,
          cmap/3,
-         collate_with/2]).
+         collate_with/2,
+         desc_collate_with/2]).
 
 
 %% @doc It is like `lists:sublist/1', BUT uses a tuple field for comparation.
@@ -270,6 +271,11 @@ seq_group_with2(_KeyMaker, [], Key, Acc) ->
     [{Key, lists:reverse(Acc)}].
 
 
-
+%% @doc Collate in ascending order using a key maker.
 collate_with(KeyMaker, List) ->
     lists:sort(fun(X, Y) -> KeyMaker(X) < KeyMaker(Y) end, List).
+
+
+%% @doc Collate in descending order using a key maker.
+desc_collate_with(KeyMaker, List) ->
+    lists:sort(fun(X, Y) -> KeyMaker(X) > KeyMaker(Y) end, List).
