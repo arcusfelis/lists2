@@ -5,6 +5,7 @@
          unique/1,
          group_with/2,
          group_count_with/2,
+         map_group_with/2,
          seq_group_with/2,
          group_by/2,
          keys/2,
@@ -120,6 +121,25 @@ group_with(_keymaker, []) ->
 group_with(KeyMaker, List) ->
     %% Map
     Mapped = [{KeyMaker(X), X} || X <- List],
+    [{SortedHKey, SortedHValue}|SortedT] = lists:keysort(1, Mapped),
+
+    %% Reduce
+    group_reduce(SortedT, SortedHKey, [SortedHValue]).
+
+
+%% @doc Looks like `SELECT Value GROUP BY Key` in SQL.
+-spec map_group_with(KeyValueMaker, list()) -> list({Key,[Value]}) when
+    KeyValueMaker :: fun((Elem) -> {Key, Value}),
+    Elem :: term(),
+    Key :: term(),
+    Value :: term().
+
+map_group_with(_KeyValueMaker, []) ->
+    [];
+
+map_group_with(KeyValueMaker, List) ->
+    %% Map
+    Mapped = [KeyValueMaker(X) || X <- List],
     [{SortedHKey, SortedHValue}|SortedT] = lists:keysort(1, Mapped),
 
     %% Reduce
