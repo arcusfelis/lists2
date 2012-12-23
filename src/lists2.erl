@@ -255,7 +255,7 @@ filter_head(F, [H|T]) when is_function(F, 1) ->
 %% Call  `F(X, C)' for each element in `Xs', where `X' is an element and 
 %% `C' is a counter from 1 to `length(Xs)'.
 %% @end
-cmap(F, Xs)  when is_function(F, 1), is_list(Xs) ->
+cmap(F, Xs)  when is_function(F, 2), is_list(Xs) ->
     cmap(F, Xs, 1).
 
 

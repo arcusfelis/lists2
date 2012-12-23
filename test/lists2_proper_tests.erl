@@ -45,3 +45,10 @@ map_group_with_test_() ->
                                   [1,2,4,5,3]),
                    [{0, ["2", "4"]}, {1, ["1", "5", "3"]}])
     ].
+
+cmap_test_() ->
+    [?_assertEqual(lists2:
+                   cmap(fun(X, N) -> atom_to_list(X) ++ integer_to_list(N) end, 
+                                  [a,b,c]),
+                   ["a1", "b2", "c3"])
+    ].
