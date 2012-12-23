@@ -36,5 +36,12 @@ run_property_testing_test() ->
 
 group_with_test_() ->
     [?_assertEqual(lists2:group_with(fun(X) -> X rem 2 end, [1,2,4,5,3]),
-                                     [{0, [2, 4]}, {1, [1, 5, 3]}])
+                   [{0, [2, 4]}, {1, [1, 5, 3]}])
+    ].
+
+map_group_with_test_() ->
+    [?_assertEqual(lists2:
+                   map_group_with(fun(X) -> {X rem 2, integer_to_list(X)} end, 
+                                  [1,2,4,5,3]),
+                   [{0, ["2", "4"]}, {1, ["1", "5", "3"]}])
     ].
