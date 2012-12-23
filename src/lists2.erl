@@ -118,7 +118,7 @@ enumerate([], _N) ->
 group_with(_keymaker, []) ->
     [];
 
-group_with(KeyMaker, List) ->
+group_with(KeyMaker, [_|_] = List)  when is_function(KeyMaker, 1) ->
     %% Map
     Mapped = [{KeyMaker(X), X} || X <- List],
     [{SortedHKey, SortedHValue}|SortedT] = lists:keysort(1, Mapped),
@@ -137,7 +137,7 @@ group_with(KeyMaker, List) ->
 map_group_with(_KeyValueMaker, []) ->
     [];
 
-map_group_with(KeyValueMaker, List) ->
+map_group_with(KeyValueMaker, [_|_] = List) when is_function(KeyValueMaker, 1) ->
     %% Map
     Mapped = [KeyValueMaker(X) || X <- List],
     [{SortedHKey, SortedHValue}|SortedT] = lists:keysort(1, Mapped),
@@ -154,7 +154,7 @@ map_group_with(KeyValueMaker, List) ->
 group_count_with(_keymaker, []) ->
     [];
 
-group_count_with(KeyMaker, List) ->
+group_count_with(KeyMaker, [_|_] = List) when is_function(KeyMaker, 1) ->
     %% Map
     Mapped = [KeyMaker(X) || X <- List],
     SortedMapped = lists:sort(Mapped),
@@ -179,7 +179,7 @@ count_sorted_clusters([], H, N) ->
 group_by(_N, []) ->
     [];
 
-group_by(N, List) ->
+group_by(N, List) when is_integer(N), N > 0 ->
     %% Map
     [SortedH|SortedT] = lists:keysort(N, List),
     SortedHKey = element(N, SortedH),
@@ -230,7 +230,7 @@ keys(N, List) ->
     [element(N, X) || X <- List].
 
 
-shuffle(List) -> 
+shuffle(List) when is_list(List) -> 
     WithKey = [ {random:uniform(), X} || X <- List ],
     Sorted  = lists:keysort(1, WithKey),
     keys(2, Sorted).
@@ -243,7 +243,7 @@ shuffle(List) ->
     F :: fun((E) -> boolean()),
     E :: term().
 
-filter_head(F, [H|T]) ->
+filter_head(F, [H|T]) when is_function(F, 1) ->
     case F(H) of
         true -> H;
         false -> filter_head(F, T)
@@ -255,7 +255,7 @@ filter_head(F, [H|T]) ->
 %% Call  `F(X, C)' for each element in `Xs', where `X' is an element and 
 %% `C' is a counter from 1 to `length(Xs)'.
 %% @end
-cmap(F, Xs) ->
+cmap(F, Xs)  when is_function(F, 1), is_list(Xs) ->
     cmap(F, Xs, 1).
 
 
@@ -273,11 +273,13 @@ cmap(_F, [], _C) ->
 %% lists2:seq_group_with(fun(X) -> X rem 2 end, [2,2,4,1,3,4]).
 %% [{0, [2,2,4]}, {1, [1,3]}, {0,[4]}
 %% '''
-seq_group_with(KeyMaker, [H|T]) ->
+seq_group_with(KeyMaker, [H|T]) when is_function(KeyMaker, 1) ->
     Key = KeyMaker(H),
     %% Acc stores elements of the group.
     Acc = [H],
-    seq_group_with2(KeyMaker, T, Key, Acc).
+    seq_group_with2(KeyMaker, T, Key, Acc);
+seq_group_with(_KeyMaker, []) ->
+    [].
 
 seq_group_with2(KeyMaker, [H|T], Key, Acc) ->
     case KeyMaker(H) of
@@ -292,10 +294,10 @@ seq_group_with2(_KeyMaker, [], Key, Acc) ->
 
 
 %% @doc Collate in ascending order using a key maker.
-collate_with(KeyMaker, List) ->
+collate_with(KeyMaker, List) when is_function(KeyMaker, 1), is_list(List) ->
     lists:sort(fun(X, Y) -> KeyMaker(X) < KeyMaker(Y) end, List).
 
 
 %% @doc Collate in descending order using a key maker.
-desc_collate_with(KeyMaker, List) ->
+desc_collate_with(KeyMaker, List) when is_function(KeyMaker, 1), is_list(List) ->
     lists:sort(fun(X, Y) -> KeyMaker(X) > KeyMaker(Y) end, List).
