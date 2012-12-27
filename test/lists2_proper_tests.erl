@@ -52,3 +52,20 @@ cmap_test_() ->
                                   [a,b,c]),
                    ["a1", "b2", "c3"])
     ].
+
+ordkeymerge_with_test_() ->
+    F = fun lists2:ordkeymerge_with/4,
+    L1 = [{1,a}, {2,b}],
+    L2 = [{1,c}, {2,a}],
+    L3 = [{2,c}, {3,a}],
+    [?_assertEqual(F(1, fun zipper1/2, L1, L2), [{1,c}, {2,b}])
+    ,?_assertEqual(F(1, fun zipper1/2, L1, L3), [{1,a}, {2,c}, {3,a}])
+    ,?_assertEqual(F(1, fun zipper1/2, L3, L1), [{1,a}, {2,c}, {3,a}])
+    ].
+
+
+%% Return a record with a highest value in the second field.
+zipper1(undefined, Y) -> Y;
+zipper1(X, undefined) -> X;
+zipper1(X, Y) when element(2, X) > element(2, Y) -> X;
+zipper1(_, Y) -> Y.

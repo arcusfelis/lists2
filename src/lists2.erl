@@ -2,14 +2,15 @@
 
 -export([ordkeysublist/3,
          ordkeysublist/4,
+         ordkeymerge_with/4,
          unique/1,
+         shuffle/1,
          group_with/2,
          group_count_with/2,
          map_group_with/2,
          seq_group_with/2,
          group_by/2,
          keys/2,
-         shuffle/1,
          enumerate/1,
          enumerate/2,
          filter_head/2,
@@ -38,6 +39,73 @@ ordkeysublist(N, [H1|T1]=L1, [H2|T2]=L2) ->
     end;
 ordkeysublist(_N, L1, _L2) ->
     L1.
+
+
+%% @doc Zip two sorted lists of tuples using an unique key in a field N.
+%% `Zipper' will be called for each unique key.
+%%
+%% If the arity of `Zipper' is `2', then the function will be called as:
+%% `Zipper(E1, E2)'.
+%%
+%% `E1' and `E2' are elements in `L1' and `L2' or `undefined', if there is no 
+%% such value in the list.
+%%
+%% If the arity of `Zipper' is `3', then the function will be called as:
+%% `Zipper(Key, E1, E2)'.
+%% @end
+-spec ordkeymerge_with(N, Zipper, L1, L2) -> L3 when
+    L1 :: [E1],
+    L2 :: [E2],
+    L3 :: [E3],
+    N  :: non_neg_integer(),
+    Zipper :: Zipper2 | Zipper3,
+    Zipper2 :: fun((E1 | undefined, E2 | undefined) -> E3),
+    Zipper3 :: fun((Key, E1 | undefined, E2 | undefined) -> E3),
+    Key :: term(),
+    E1 :: term(),
+    E2 :: term(),
+    E3 :: term().
+
+ordkeymerge_with(N, Zipper, L1, L2) 
+    when is_function(Zipper, 2), is_integer(N), N > 0, is_list(L1), is_list(L2) ->
+    ordkeymerge_with2(N, Zipper, L1, L2);
+
+ordkeymerge_with(N, Zipper, L1, L2) 
+    when is_function(Zipper, 3), is_integer(N), N > 0, is_list(L1), is_list(L2) ->
+    ordkeymerge_with3(N, Zipper, L1, L2).
+
+
+ordkeymerge_with2(N, Zipper, [H1|T1]=L1, [H2|T2]=L2) ->
+    Key1 = element(N, H1),
+    Key2 = element(N, H2),
+    if
+        Key1 =:= Key2 -> [Zipper(H1, H2) | ordkeymerge_with2(N, Zipper, T1, T2)];
+        %% Keys1 = [1,2,3] Keys2 = [2,3]
+        Key1 < Key2   -> [Zipper(H1, undefined) | ordkeymerge_with2(N, Zipper, T1, L2)];
+        %% Keys1 = [2,3] Keys2 = [1,2,3]
+        true          -> [Zipper(undefined, H2) | ordkeymerge_with2(N, Zipper, L1, T2)]
+    end;
+ordkeymerge_with2(_N, Zipper, [], L2) ->
+    [Zipper(undefined, H2) || H2 <- L2];
+ordkeymerge_with2(_N, Zipper, L1, []) ->
+    [Zipper(H1, undefined) || H1 <- L1].
+
+
+ordkeymerge_with3(N, Zipper, [H1|T1]=L1, [H2|T2]=L2) ->
+    Key1 = element(N, H1),
+    Key2 = element(N, H2),
+    if
+        Key1 =:= Key2 -> [Zipper(Key1, H1, H2) | ordkeymerge_with2(N, Zipper, T1, T2)];
+        %% Keys1 = [1,2,3] Keys2 = [2,3]
+        Key1 < Key2   -> [Zipper(Key1, H1, undefined) | ordkeymerge_with2(N, Zipper, T1, L2)];
+        %% Keys1 = [2,3] Keys2 = [1,2,3]
+        true          -> [Zipper(Key2, undefined, H2) | ordkeymerge_with2(N, Zipper, L1, T2)]
+    end;
+ordkeymerge_with3(N, Zipper, [], L2) ->
+    [Zipper(element(N, H2), undefined, H2) || H2 <- L2];
+ordkeymerge_with3(N, Zipper, L1, []) ->
+    [Zipper(element(N, H1), H1, undefined) || H1 <- L1].
+
 
 
 %% @doc It is a variant of `ordkeysublist/3', that uses different field positions.
@@ -89,6 +157,13 @@ ordkeysublist4_test_() ->
 %% If the current order is not important, than use `lists:usort/1' instead.
 unique(L) ->
     keys(2, lists:keysort(1, lists:ukeysort(2, enumerate(L)))).
+
+
+%% @doc Returns a list in random order.
+shuffle(List) when is_list(List) -> 
+    WithKey = [ {random:uniform(), X} || X <- List ],
+    Sorted  = lists:keysort(1, WithKey),
+    keys(2, Sorted).
     
 
 %% @doc Create a list of pairs: `[{lists:nth(X), X}]'.
@@ -109,10 +184,10 @@ enumerate([], _N) ->
 %%
 %% For example:
 %%
-%% ```
+%% <code>
 %% group_with(fun(X) -> X rem 2 end, [1,2,4,5,3]).
 %% [{0, [2, 4]}, {1, [1, 3, 5]}]
-%% '''
+%% </code>
 -spec group_with(fun(), list()) -> list({term(),list()}).
 
 group_with(_keymaker, []) ->
@@ -192,7 +267,8 @@ group_by(N, List) when is_integer(N), N > 0 ->
 %% @end
 %%
 %% Still the same group:
-%% group_reduce([{<<"user">>,{x_prefix_name,user,65,true,true,true}}],<<"author">>,[{x_prefix_name,author,65,true,false,true}])
+%% group_reduce([{<<"user">>,{x_prefix_name,user,65,true,true,true}}],
+%%                <<"author">>,[{x_prefix_name,author,65,true,false,true}])
 %%
 %% Version for ppairs.
 group_reduce([{Key, Val}|T], Key, Vals) ->
@@ -228,12 +304,6 @@ group_reduce(_N, [], Key, Acc) ->
 %% @doc Apply `element(N, _)' for each element.
 keys(N, List) ->
     [element(N, X) || X <- List].
-
-
-shuffle(List) when is_list(List) -> 
-    WithKey = [ {random:uniform(), X} || X <- List ],
-    Sorted  = lists:keysort(1, WithKey),
-    keys(2, Sorted).
 
 
 %% @doc This call is equal to 
@@ -295,7 +365,10 @@ seq_group_with2(_KeyMaker, [], Key, Acc) ->
 
 %% @doc Collate in ascending order using a key maker.
 collate_with(KeyMaker, List) when is_function(KeyMaker, 1), is_list(List) ->
-    lists:sort(fun(X, Y) -> KeyMaker(X) < KeyMaker(Y) end, List).
+    TaggedList = [{KeyMaker(X), X} || X <- List],
+    SortedTaggedList = lists:keysort(1, TaggedList),
+    keys(2, SortedTaggedList).
+%   lists:sort(fun(X, Y) -> KeyMaker(X) < KeyMaker(Y) end, List).
 
 
 %% @doc Collate in descending order using a key maker.
