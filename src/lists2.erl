@@ -20,7 +20,13 @@
          desc_collate_with/2,
          rotate/1,
          align_ordset/2,
-         align_ordset/3]).
+         align_ordset/3,
+         zip4/4,
+         zip5/5,
+         zip6/6,
+         zip_with4/5,
+         zip_with5/6,
+         zip_with6/7]).
 
 
 
@@ -126,6 +132,8 @@ align_ordset([], [])            -> [].
 
 
 
+%% @doc Align `KeySet' with `MasterSet'. The result list contains values from
+%% `ValSet'.
 -spec align_ordset(KeySet, ValSet, MasterSet) -> list() when
     KeySet :: list(),
     ValSet :: list(),
@@ -419,3 +427,44 @@ do_rotate(0, _Tuples, Acc) ->
 do_rotate(N, Tuples, Acc) ->
     Keys = keys(N, Tuples),
     do_rotate(N-1, Tuples, [Keys|Acc]).
+
+
+
+
+
+zip4([H1|T1], [H2|T2], [H3|T3], [H4|T4]) ->
+    [{H1, H2, H3, H4}|zip4(T1, T2, T3, T4)];
+zip4(_, _, _, _) ->
+    [].
+
+
+zip5([H1|T1], [H2|T2], [H3|T3], [H4|T4], [H5|T5]) ->
+    [{H1, H2, H3, H4, H5}|zip5(T1, T2, T3, T4, T5)];
+zip5(_, _, _, _, _) ->
+    [].
+
+
+zip6([H1|T1], [H2|T2], [H3|T3], [H4|T4], [H5|T5], [H6|T6]) ->
+    [{H1, H2, H3, H4, H5, H6}|zip6(T1, T2, T3, T4, T5, T6)];
+zip6(_, _, _, _, _, _) ->
+    [].
+
+
+
+zip_with4(F, [H1|T1], [H2|T2], [H3|T3], [H4|T4]) ->
+    [F(H1, H2, H3, H4)|zip_with4(F, T1, T2, T3, T4)];
+zip_with4(_, _, _, _, _) ->
+    [].
+
+
+zip_with5(F, [H1|T1], [H2|T2], [H3|T3], [H4|T4], [H5|T5]) ->
+    [F(H1, H2, H3, H4, H5)|zip_with5(F, T1, T2, T3, T4, T5)];
+zip_with5(_, _, _, _, _, _) ->
+    [].
+
+
+zip_with6(F, [H1|T1], [H2|T2], [H3|T3], [H4|T4], [H5|T5], [H6|T6]) ->
+    [F(H1, H2, H3, H4, H5, H6)|zip_with6(F, T1, T2, T3, T4, T5, T6)];
+zip_with6(_, _, _, _, _, _, _) ->
+    [].
+
