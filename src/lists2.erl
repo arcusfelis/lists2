@@ -17,7 +17,11 @@
          cmap/2,
          cmap/3,
          collate_with/2,
-         desc_collate_with/2]).
+         desc_collate_with/2,
+         rotate/1,
+         align_ordset/2,
+         align_ordset/3]).
+
 
 
 %% @doc It is like `lists:sublist/1', BUT uses a tuple field for comparation.
@@ -106,6 +110,31 @@ ordkeymerge_with3(N, Zipper, [], L2) ->
 ordkeymerge_with3(N, Zipper, L1, []) ->
     [Zipper(element(N, H1), H1, undefined) || H1 <- L1].
 
+
+%% @doc Insert `undefined' on place of elements of `MasterSet' with values
+%% from `ordsets:subtract(MasterSet,SrcSet)'.
+%%
+%% Result list is not an ordset.
+-spec align_ordset(SrcSet, MasterSet) -> list() when
+    SrcSet :: list(),
+    MasterSet :: list().
+
+align_ordset([H|T1], [H|T2])    -> [H|align_ordset(T1, T2)];
+%% skip H1.
+align_ordset(T1, [_H2|T2])      -> [undefined|align_ordset(T1, T2)];
+align_ordset([], [])            -> [].
+
+
+
+-spec align_ordset(KeySet, ValSet, MasterSet) -> list() when
+    KeySet :: list(),
+    ValSet :: list(),
+    MasterSet :: list().
+
+align_ordset([K|Ks], [V|Vs], [K|Ms]) -> [V|align_ordset(Ks, Vs, Ms)];
+%% Skip K, V.
+align_ordset(Ks, Vs, [_|Ms])         -> [undefined|align_ordset(Ks, Vs, Ms)];
+align_ordset([], [], [])             -> [].
 
 
 %% @doc It is a variant of `ordkeysublist/3', that uses different field positions.
@@ -374,3 +403,19 @@ collate_with(KeyMaker, List) when is_function(KeyMaker, 1), is_list(List) ->
 %% @doc Collate in descending order using a key maker.
 desc_collate_with(KeyMaker, List) when is_function(KeyMaker, 1), is_list(List) ->
     lists:sort(fun(X, Y) -> KeyMaker(X) > KeyMaker(Y) end, List).
+
+
+%% @doc Convert a list of tuples to a tuple of lists.
+-spec rotate(Tuples) -> Tuple when
+    Tuples :: [tuple()],
+    Tuple :: tuple(list()).
+rotate([X|_]=Xs) ->
+    N = tuple_size(X),
+    do_rotate(N, Xs, []).
+
+
+do_rotate(0, _Tuples, Acc) ->
+    list_to_tuple(Acc);
+do_rotate(N, Tuples, Acc) ->
+    Keys = keys(N, Tuples),
+    do_rotate(N-1, Tuples, [Keys|Acc]).
