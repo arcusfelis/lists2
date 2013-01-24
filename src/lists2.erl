@@ -8,6 +8,7 @@
          group_with/2,
          group_count_with/2,
          map_group_with/2,
+         group_pairs/1,
          seq_group_with/2,
          group_by/2,
          keys/2,
@@ -19,6 +20,7 @@
          collate_with/2,
          desc_collate_with/2,
          rotate/1,
+         rotate/2,
          align_ordset/2,
          align_ordset/3,
          zip4/4,
@@ -258,6 +260,13 @@ map_group_with(KeyValueMaker, [_|_] = List) when is_function(KeyValueMaker, 1) -
     group_reduce(SortedT, SortedHKey, [SortedHValue]).
 
 
+%% @doc Group pair values by key.
+%% It is `map_group_with(fun(X) -> X end, List)'.
+group_pairs(List) ->
+    [{SortedHKey, SortedHValue}|SortedT] = lists:keysort(1, List),
+    group_reduce(SortedT, SortedHKey, [SortedHValue]).
+
+
 %% @doc Calculates how many elements are with the same key.
 %% It is the same as 
 %%      `[{K, length(L)} || {K, L} <- group_with(KeyMaker, List)]'.
@@ -415,7 +424,7 @@ desc_collate_with(KeyMaker, List) when is_function(KeyMaker, 1), is_list(List) -
 
 %% @doc Convert a list of tuples to a tuple of lists.
 -spec rotate(Tuples) -> Tuple when
-    Tuples :: [tuple()],
+    Tuples :: [tuple()| [tuple()]],
     Tuple :: tuple(list()).
 rotate([X|_]=Xs) ->
     N = tuple_size(X),
@@ -428,6 +437,16 @@ do_rotate(N, Tuples, Acc) ->
     Keys = keys(N, Tuples),
     do_rotate(N-1, Tuples, [Keys|Acc]).
 
+
+-spec rotate(N, Tuples) -> Tuple when
+    N :: non_neg_integer(),
+    Tuples :: [tuple()],
+    Tuple :: tuple(list()).
+
+rotate(N, []) ->
+    list_to_tuple(lists:duplicate(N, []));
+rotate(N, Xs) ->
+    do_rotate(N, Xs, []).
 
 
 
