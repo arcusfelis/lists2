@@ -3,6 +3,7 @@
 -export([ordkeysublist/3,
          ordkeysublist/4,
          ordkeymerge_with/4,
+         ordkeymerge_with/5,
          unique/1,
          shuffle/1,
          group_with/2,
@@ -78,45 +79,65 @@ ordkeysublist(_N, L1, _L2) ->
     E2 :: term(),
     E3 :: term().
 
-ordkeymerge_with(N, Zipper, L1, L2) 
-    when is_function(Zipper, 2), is_integer(N), N > 0, is_list(L1), is_list(L2) ->
-    ordkeymerge_with2(N, Zipper, L1, L2);
-
-ordkeymerge_with(N, Zipper, L1, L2) 
-    when is_function(Zipper, 3), is_integer(N), N > 0, is_list(L1), is_list(L2) ->
-    ordkeymerge_with3(N, Zipper, L1, L2).
+ordkeymerge_with(N, Zipper, L1, L2) ->
+    ordkeymerge_with(N, N, Zipper, L1, L2).
 
 
-ordkeymerge_with2(N, Zipper, [H1|T1]=L1, [H2|T2]=L2) ->
-    Key1 = element(N, H1),
-    Key2 = element(N, H2),
+-spec ordkeymerge_with(N1, N2, Zipper, L1, L2) -> L3 when
+    L1 :: [E1],
+    L2 :: [E2],
+    L3 :: [E3],
+    N1 :: non_neg_integer(),
+    N2 :: non_neg_integer(),
+    Zipper :: Zipper2 | Zipper3,
+    Zipper2 :: fun((E1 | undefined, E2 | undefined) -> E3),
+    Zipper3 :: fun((Key, E1 | undefined, E2 | undefined) -> E3),
+    Key :: term(),
+    E1 :: term(),
+    E2 :: term(),
+    E3 :: term().
+
+ordkeymerge_with(N1, N2, Zipper, L1, L2) 
+    when is_function(Zipper, 2), 
+        is_integer(N1), N1 > 0, is_integer(N2), N2 > 0, is_list(L1), is_list(L2) ->
+    ordkeymerge_with2(N1, N2, Zipper, L1, L2);
+
+ordkeymerge_with(N1, N2, Zipper, L1, L2) 
+    when is_function(Zipper, 3),
+        is_integer(N1), N1 > 0, is_integer(N2), N2 > 0, is_list(L1), is_list(L2) ->
+    ordkeymerge_with3(N1, N2, Zipper, L1, L2).
+
+
+ordkeymerge_with2(N1, N2, Z, [H1|T1]=L1, [H2|T2]=L2) ->
+    Key1 = element(N1, H1),
+    Key2 = element(N2, H2),
     if
-        Key1 =:= Key2 -> [Zipper(H1, H2) | ordkeymerge_with2(N, Zipper, T1, T2)];
+        Key1 =:= Key2 -> [Z(H1, H2) | ordkeymerge_with2(N1, N2, Z, T1, T2)];
         %% Keys1 = [1,2,3] Keys2 = [2,3]
-        Key1 < Key2   -> [Zipper(H1, undefined) | ordkeymerge_with2(N, Zipper, T1, L2)];
+        Key1 < Key2   -> [Z(H1, undefined) | ordkeymerge_with2(N1, N2, Z, T1, L2)];
         %% Keys1 = [2,3] Keys2 = [1,2,3]
-        true          -> [Zipper(undefined, H2) | ordkeymerge_with2(N, Zipper, L1, T2)]
+        true          -> [Z(undefined, H2) | ordkeymerge_with2(N1, N2, Z, L1, T2)]
     end;
-ordkeymerge_with2(_N, Zipper, [], L2) ->
-    [Zipper(undefined, H2) || H2 <- L2];
-ordkeymerge_with2(_N, Zipper, L1, []) ->
-    [Zipper(H1, undefined) || H1 <- L1].
+ordkeymerge_with2(_N1, _N2, Z, [], L2) ->
+    [Z(undefined, H2) || H2 <- L2];
+ordkeymerge_with2(_N1, _N2, Z, L1, []) ->
+    [Z(H1, undefined) || H1 <- L1].
 
 
-ordkeymerge_with3(N, Zipper, [H1|T1]=L1, [H2|T2]=L2) ->
-    Key1 = element(N, H1),
-    Key2 = element(N, H2),
+ordkeymerge_with3(N1, N2, Z, [H1|T1]=L1, [H2|T2]=L2) ->
+    Key1 = element(N1, H1),
+    Key2 = element(N2, H2),
     if
-        Key1 =:= Key2 -> [Zipper(Key1, H1, H2) | ordkeymerge_with2(N, Zipper, T1, T2)];
+        Key1 =:= Key2 -> [Z(Key1, H1, H2) | ordkeymerge_with2(N1, N2, Z, T1, T2)];
         %% Keys1 = [1,2,3] Keys2 = [2,3]
-        Key1 < Key2   -> [Zipper(Key1, H1, undefined) | ordkeymerge_with2(N, Zipper, T1, L2)];
+        Key1 < Key2   -> [Z(Key1, H1, undefined) | ordkeymerge_with2(N1, N2, Z, T1, L2)];
         %% Keys1 = [2,3] Keys2 = [1,2,3]
-        true          -> [Zipper(Key2, undefined, H2) | ordkeymerge_with2(N, Zipper, L1, T2)]
+        true          -> [Z(Key2, undefined, H2) | ordkeymerge_with2(N1, N2, Z, L1, T2)]
     end;
-ordkeymerge_with3(N, Zipper, [], L2) ->
-    [Zipper(element(N, H2), undefined, H2) || H2 <- L2];
-ordkeymerge_with3(N, Zipper, L1, []) ->
-    [Zipper(element(N, H1), H1, undefined) || H1 <- L1].
+ordkeymerge_with3(_N1, N2, Z, [], L2) ->
+    [Z(element(N2, H2), undefined, H2) || H2 <- L2];
+ordkeymerge_with3(N1, _N2, Z, L1, []) ->
+    [Z(element(N1, H1), H1, undefined) || H1 <- L1].
 
 
 %% @doc Insert `undefined' on place of elements of `MasterSet' with values
