@@ -283,6 +283,9 @@ map_group_with(KeyValueMaker, [_|_] = List) when is_function(KeyValueMaker, 1) -
 
 %% @doc Group pair values by key.
 %% It is `map_group_with(fun(X) -> X end, List)'.
+group_pairs([]) ->
+    [];
+
 group_pairs(List) ->
     [{SortedHKey, SortedHValue}|SortedT] = lists:keysort(1, List),
     group_reduce(SortedT, SortedHKey, [SortedHValue]).

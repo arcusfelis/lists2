@@ -74,3 +74,9 @@ zipper1(undefined, Y) -> Y;
 zipper1(X, undefined) -> X;
 zipper1(X, Y) when element(2, X) > element(2, Y) -> X;
 zipper1(_, Y) -> Y.
+
+
+
+group_pairs_test_() ->
+    [?_assertEqual(lists2:group_pairs([]), [])
+    ].
