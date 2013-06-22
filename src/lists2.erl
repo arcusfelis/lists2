@@ -215,8 +215,14 @@ ordkeysublist4_test_() ->
 
 %% @doc Delete duplicates and SAVE the current elements' order.
 %% If the current order is not important, than use `lists:usort/1' instead.
-unique(L) ->
-    keys(2, lists:keysort(1, lists:ukeysort(2, enumerate(L)))).
+unique([H|T]) ->
+    [H|unique(delete_all(H, T))];
+unique([]) ->
+    [].
+
+delete_all(X, [X|T]) -> delete_all(X, T);
+delete_all(X, [H|T]) -> [H|delete_all(X, T)];
+delete_all(_, []) -> [].
 
 
 %% @doc Returns a list in random order.
@@ -510,4 +516,5 @@ zip_with6(F, [H1|T1], [H2|T2], [H3|T3], [H4|T4], [H5|T5], [H6|T6]) ->
     [F(H1, H2, H3, H4, H5, H6)|zip_with6(F, T1, T2, T3, T4, T5, T6)];
 zip_with6(_, _, _, _, _, _, _) ->
     [].
+
 
