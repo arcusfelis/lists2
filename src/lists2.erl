@@ -29,7 +29,11 @@
          zip6/6,
          zip_with4/5,
          zip_with5/6,
-         zip_with6/7]).
+         zip_with6/7,
+         sorted_non_unique_elements/1,
+         sorted_to_non_unique_elements/1,
+         sorted_unique_elements/1,
+         sorted_to_unique_elements/1]).
 
 
 
@@ -518,3 +522,66 @@ zip_with6(_, _, _, _, _, _, _) ->
     [].
 
 
+%% sorted_non_unique_elements([]) -> [a,d]
+sorted_non_unique_elements(List) ->
+    Sorted = lists:sort(List),
+    sorted_to_non_unique_elements(Sorted).
+
+-ifdef(TEST).
+
+sorted_non_unique_elements_test_() ->
+    [?_assertEqual([a,d], sorted_non_unique_elements([d,d,d,a,c,b,a])),
+     ?_assertEqual([], sorted_non_unique_elements([])),
+     ?_assertEqual([], sorted_non_unique_elements([1]))
+    ].
+
+-endif.
+
+sorted_to_non_unique_elements([H,H|T]) ->
+    %% H is not unique
+    T2 = skip_matching_head(H, T),
+    [H|sorted_to_non_unique_elements(T2)];
+sorted_to_non_unique_elements([H|T]) ->
+    %% H is unique
+    sorted_to_non_unique_elements(T);
+sorted_to_non_unique_elements([]) ->
+    [].
+
+sorted_unique_elements(List) ->
+    Sorted = lists:sort(List),
+    sorted_to_unique_elements(Sorted).
+
+-ifdef(TEST).
+
+sorted_unique_elements_test_() ->
+    [?_assertEqual([b,c], sorted_unique_elements([d,d,d,a,c,b,a])),
+     ?_assertEqual([], sorted_unique_elements([])),
+     ?_assertEqual([1], sorted_unique_elements([1]))
+    ].
+
+-endif.
+
+sorted_to_unique_elements([H,H|T]) ->
+    %% H is not unique
+    T2 = skip_matching_head(H, T),
+    sorted_to_unique_elements(T2);
+sorted_to_unique_elements([H|T]) ->
+    %% H is unique
+    [H|sorted_to_unique_elements(T)];
+sorted_to_unique_elements([]) ->
+    [].
+
+skip_matching_head(H, [H|T]) ->
+    skip_matching_head(H, T);
+skip_matching_head(_, T) ->
+    T.
+
+-ifdef(TEST).
+
+skip_matching_head_test_() ->
+    [?_assertEqual([2,3], skip_matching_head(1, [1,2,3])),
+     ?_assertEqual([f,d], skip_matching_head(a, [a,a,f,d])),
+     ?_assertEqual([k,a,f], skip_matching_head(a, [k,a,f]))
+    ].
+
+-endif.
