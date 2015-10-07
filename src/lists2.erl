@@ -13,6 +13,7 @@
          seq_group_with/2,
          group_by/2,
          keys/2,
+         elements/2,
          enumerate/1,
          enumerate/2,
          filter_head/2,
@@ -384,6 +385,9 @@ group_reduce(_N, [], Key, Acc) ->
 %% @doc Apply `element(N, _)' for each element.
 keys(N, List) ->
     [element(N, X) || X <- List].
+
+elements(N, List) ->
+    keys(N, List).
 
 
 %% @doc This call is equal to 
