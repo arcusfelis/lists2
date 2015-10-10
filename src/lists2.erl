@@ -31,10 +31,13 @@
          zip_with4/5,
          zip_with5/6,
          zip_with6/7,
+         zipn/1,
+         unzipn/1,
          sorted_non_unique_elements/1,
          sorted_to_non_unique_elements/1,
          sorted_unique_elements/1,
-         sorted_to_unique_elements/1]).
+         sorted_to_unique_elements/1,
+         cluster_pairs/1]).
 
 
 
@@ -468,7 +471,6 @@ rotate([X|_]=Xs) ->
     N = tuple_size(X),
     do_rotate(N, Xs, []).
 
-
 do_rotate(0, _Tuples, Acc) ->
     list_to_tuple(Acc);
 do_rotate(N, Tuples, Acc) ->
@@ -524,6 +526,19 @@ zip_with6(F, [H1|T1], [H2|T2], [H3|T3], [H4|T4], [H5|T5], [H6|T6]) ->
     [F(H1, H2, H3, H4, H5, H6)|zip_with6(F, T1, T2, T3, T4, T5, T6)];
 zip_with6(_, _, _, _, _, _, _) ->
     [].
+
+%% `lists:zipn([[1,2,3], [a,b,c]]) -> [{1,a}, {2,b}, {3,c}]'
+zipn([]) ->
+    []; % special case
+zipn([[]|_]) ->
+    []; % trap recursion
+zipn(Lists) ->
+    Heads = [hd(X) || X <- Lists],
+    Tails = [tl(X) || X <- Lists],
+    [list_to_tuple(Heads)|zipn(Tails)].
+
+unzipn(Tuples) ->
+    rotate(Tuples).
 
 
 %% sorted_non_unique_elements([]) -> [a,d]
@@ -589,3 +604,51 @@ skip_matching_head_test_() ->
     ].
 
 -endif.
+
+
+%% Pairs => SortedPairs
+%% [{2,1}, {1,3}, {3,6}, {4,5}, {3,3}] => [{1,2}, {1,3}, {3,6}, {4,5}]
+%% SortedPairs => GroupedPairs
+%% [{1,2}, {1,3}, {3,6}, {4,5}] => [{1,[2,3]}, {3,[6]}, {4,[5]}]
+%% GroupedPairs => Result
+%% [{1,2}, {1,3}, {3,6}, {4,5}] => [[1,2,3,6], [4,5]]
+cluster_pairs([]) ->
+    [];
+cluster_pairs(Pairs) ->
+    SortedPairs = lists:usort(map_min_max(skip_aa(Pairs))),
+    GroupedPairs = group_pairs(SortedPairs),
+    cluster_grouped_pairs(GroupedPairs).
+
+cluster_grouped_pairs([Pair|Pairs]) ->
+    {CompleteCluster, Pairs2} = extract_cluster(Pair, Pairs),
+    [CompleteCluster|cluster_grouped_pairs(Pairs2)];
+cluster_grouped_pairs([]) ->
+    [].
+
+extract_cluster({K, Vs}, Pairs) ->
+    extract_cluster([K], Vs, Pairs).
+
+%% Extracts one complete cluster
+%% Searches for all values recursively (second arg) and put them into Acc (first arg)
+%% Acc - reverse sorted
+extract_cluster(Acc, [H|T], Pairs) ->
+    case lists:keytake(H, 1, Pairs) of
+        false ->
+            extract_cluster([H|Acc], T, Pairs);
+        {value, {H,Vs}, Pairs2} ->
+            T2 = lists:umerge(T, Vs),
+            extract_cluster([H|Acc], T2, Pairs2)
+    end;
+extract_cluster(Acc, [], Pairs) ->
+    {lists:reverse(Acc), Pairs}.
+
+skip_aa(Pairs) ->
+    [AB || {A,B}=AB <- Pairs, A =/= B].
+
+map_min_max(Pairs) ->
+    [min_max(A, B) || {A,B} <- Pairs].
+
+min_max(A, B) when A < B ->
+    {A, B};
+min_max(A, B) ->
+    {B, A}.
