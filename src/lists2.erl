@@ -39,7 +39,8 @@
          sorted_to_unique_elements/1,
          cluster_pairs/1,
          clusters_to_pairs/1,
-         keyaddafter/4]).
+         keyaddafter/4,
+         cartesian/1]).
 
 
 
@@ -668,3 +669,13 @@ keyaddafter(V, N, [H|T], NewTuple) ->
     [H|keyaddafter(V, N, T, NewTuple)];
 keyaddafter(_,_, [], NewTuple) ->
     [NewTuple]. % not found, insert at the end
+
+
+%% @doc Cartesian product or all possible permutations of n-lists
+%%
+%% [[1,2,3],[a,b]] => [[1,a],[1,b],[2,a],[2,b],[3,a],[3,b]]
+%% ["abc","def"] => ["ad", "ae", "af", "bd", "be", "bf", "cd", "ce", "cf"]
+cartesian([])       -> [];
+cartesian([H])      -> [[A] || A <- H];
+cartesian([As,Bs])  -> [[A,B] || A <- As, B <- Bs];
+cartesian([H|T])    -> [[A|B] || A <- H, B <- cartesian(T)].
