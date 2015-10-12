@@ -38,7 +38,8 @@
          sorted_unique_elements/1,
          sorted_to_unique_elements/1,
          cluster_pairs/1,
-         clusters_to_pairs/1]).
+         clusters_to_pairs/1,
+         keyaddafter/4]).
 
 
 
@@ -659,3 +660,11 @@ min_max(A, B) ->
 %% [[1,2,3],[a,b,c]] => [{1,[2,3]}, {2,[1,3]}, {3,[1,2]}, {a,[b,c]}, {b, [a,c]}, {c, [a,b]}]
 clusters_to_pairs(Clusters) ->
     [{Member, lists:delete(Member, Cluster)} || Cluster <- Clusters, Member <- Cluster].
+
+
+keyaddafter(V, N, [H|T], NewTuple) when element(N, H) =:= V ->
+    [H,NewTuple|T];
+keyaddafter(V, N, [H|T], NewTuple) ->
+    [H|keyaddafter(V, N, T, NewTuple)];
+keyaddafter(_,_, [], NewTuple) ->
+    [NewTuple]. % not found, insert at the end
