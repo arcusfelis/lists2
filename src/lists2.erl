@@ -37,7 +37,8 @@
          sorted_to_non_unique_elements/1,
          sorted_unique_elements/1,
          sorted_to_unique_elements/1,
-         cluster_pairs/1]).
+         cluster_pairs/1,
+         clusters_to_pairs/1]).
 
 
 
@@ -652,3 +653,9 @@ min_max(A, B) when A < B ->
     {A, B};
 min_max(A, B) ->
     {B, A}.
+
+
+%% @doc Convert clusters to pairs
+%% [[1,2,3],[a,b,c]] => [{1,[2,3]}, {2,[1,3]}, {3,[1,2]}, {a,[b,c]}, {b, [a,c]}, {c, [a,b]}]
+clusters_to_pairs(Clusters) ->
+    [{Member, lists:delete(Member, Cluster)} || Cluster <- Clusters, Member <- Cluster].
