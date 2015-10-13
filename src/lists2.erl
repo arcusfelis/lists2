@@ -42,7 +42,10 @@
          keyaddafter/4,
          cartesian/1,
          swap_pairs/1,
-         is_sublist/2]).
+         is_sublist/2,
+         delete_nth/2,
+         set_nth/3,
+         insert_nth/3]).
 
 
 
@@ -692,3 +695,25 @@ is_sublist([], _) -> true;
 is_sublist(_, []) -> false;
 is_sublist([H|T1], [H|T2]) -> is_sublist(T1, T2);
 is_sublist(Sub, [_|T2]) -> is_sublist(Sub, T2).
+
+
+%% `erlang:delete_element/2' for lists
+%% Not efficient but useful
+-spec delete_nth(pos_integer(), [T]) -> [T].
+delete_nth(Pos, List) ->
+    {H,[_ | T]} = lists:split(Pos - 1, List),
+    H ++ T.
+
+%% `erlang:setelement/3' for lists
+%% Not efficient but useful
+%% TODO recursive?
+-spec set_nth(pos_integer(), [T], T) -> [T].
+set_nth(Index, List, NewElem) ->
+    {H,[_ | T]} = lists:split(Index - 1, List),
+    H ++ [NewElem] ++ T.
+
+%% `erlang:insert_element/3' for lists
+-spec insert_nth(pos_integer(), [T], T) -> [T].
+insert_nth(Index, List, NewElem) ->
+    {H,T} = lists:split(Index - 1, List),
+    H ++ [NewElem] ++ T.
