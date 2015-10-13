@@ -40,7 +40,8 @@
          cluster_pairs/1,
          clusters_to_pairs/1,
          keyaddafter/4,
-         cartesian/1]).
+         cartesian/1,
+         swap_pairs/1]).
 
 
 
@@ -679,3 +680,6 @@ cartesian([])       -> [];
 cartesian([H])      -> [[A] || A <- H];
 cartesian([As,Bs])  -> [[A,B] || A <- As, B <- Bs];
 cartesian([H|T])    -> [[A|B] || A <- H, B <- cartesian(T)].
+
+swap_pairs(Pairs) ->
+    [{B,A} || {A,B} <- Pairs].
