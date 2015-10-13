@@ -41,7 +41,8 @@
          clusters_to_pairs/1,
          keyaddafter/4,
          cartesian/1,
-         swap_pairs/1]).
+         swap_pairs/1,
+         is_sublist/2]).
 
 
 
@@ -683,3 +684,11 @@ cartesian([H|T])    -> [[A|B] || A <- H, B <- cartesian(T)].
 
 swap_pairs(Pairs) ->
     [{B,A} || {A,B} <- Pairs].
+
+%% @doc Check that Sub is sublist of List
+%% `is_sublist([1,3,5], [1,2,3,4,5,6]) -> ture'
+-spec is_sublist(Sub::[term()], List::[term()]) -> boolean().
+is_sublist([], _) -> true;
+is_sublist(_, []) -> false;
+is_sublist([H|T1], [H|T2]) -> is_sublist(T1, T2);
+is_sublist(Sub, [_|T2]) -> is_sublist(Sub, T2).
