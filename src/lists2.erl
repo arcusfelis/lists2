@@ -45,7 +45,10 @@
          is_sublist/2,
          delete_nth/2,
          set_nth/3,
-         insert_nth/3]).
+         insert_nth/3,
+         is_sorted/1,
+         splitwith_all/2,
+         not_splitwith/2]).
 
 
 
@@ -717,3 +720,30 @@ set_nth(Index, List, NewElem) ->
 insert_nth(Index, List, NewElem) ->
     {H,T} = lists:split(Index - 1, List),
     H ++ [NewElem] ++ T.
+
+-spec is_sorted(list()) -> boolean().
+is_sorted([]) -> true;
+is_sorted([_]) -> true;
+is_sorted([A | [B|_] = T]) when A =< B -> is_sorted(T);
+is_sorted(_) -> false.
+
+%% @doc Recursive lists:splitwith/2 (kind of)
+%%
+%% Returns list of `{Matched, NotMatched}' tuples.
+%% Property:
+%% `List = lists:append([[Matched, NotMatched] || {Matched, NotMatched} <- Result]'
+%%
+%% Example:
+%% `lists2:splitwith_all(fun(X) -> X =/= $. end, "1234.54565..").'
+%%
+%% Result:
+%% `[{"1234","."},{"54565",".."}]'
+splitwith_all(_Pred, []) ->
+    [];
+splitwith_all(Pred, List) ->
+    {Matched, Others} = lists:splitwith(Pred, List),
+    {NotMatched, Others2} = not_splitwith(Pred, Others),
+    [{Matched, NotMatched}|splitwith_all(Pred, Others2)].
+
+not_splitwith(Pred, List) ->
+    lists:splitwith(fun(X) -> not Pred(X) end, List).
