@@ -48,7 +48,11 @@
          insert_nth/3,
          is_sorted/1,
          splitwith_all/2,
-         not_splitwith/2]).
+         not_splitwith/2,
+         keymember2/5,
+         keydelete2/5,
+         keyreplace2/6,
+         get_value2/3]).
 
 
 
@@ -747,3 +751,36 @@ splitwith_all(Pred, List) ->
 
 not_splitwith(Pred, List) ->
     lists:splitwith(fun(X) -> not Pred(X) end, List).
+
+
+%% @doc `lists:keymember/3' for two elements
+keymember2(A, B, N, M, [H|_]) when element(N, H) =:= A, element(M, H) =:= B ->
+    true;
+keymember2(A, B, N, M, [_|T]) ->
+    keymember2(A, B, N, M, T);
+keymember2(_, _, _, _, []) ->
+    false.
+
+%% @doc `lists:keydelete/3' for two elements
+keydelete2(A, B, N, M, [H|T]) when element(N, H) =:= A, element(M, H) =:= B ->
+    T;
+keydelete2(A, B, N, M, [H|T]) ->
+    [H|keydelete2(A, B, N, M, T)];
+keydelete2(_, _, _, _, []) ->
+    [].
+
+%% @doc `lists:keyreplace/4' for two elements
+keyreplace2(A, B, N, M, [H|T], New) when element(N, H) =:= A, element(M, H) =:= B ->
+    [New|T];
+keyreplace2(A, B, N, M, [H|T], New) ->
+    [H|keyreplace2(A, B, N, M, T, New)];
+keyreplace2(_, _, _, _, [], _) ->
+    [].
+
+%% @doc `proplists:get_value/2' for two keys
+get_value2(A, B, [{A,B,V}|_]) ->
+    V;
+get_value2(A, B, [_|T]) ->
+    get_value2(A, B, T);
+get_value2(_, _, []) ->
+    undefined.
