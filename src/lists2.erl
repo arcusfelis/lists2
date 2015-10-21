@@ -40,6 +40,7 @@
          cluster_pairs/1,
          clusters_to_pairs/1,
          keyaddafter/4,
+         keyaddafter2/6,
          cartesian/1,
          swap_pairs/1,
          is_sublist/2,
@@ -680,6 +681,13 @@ keyaddafter(V, N, [H|T], NewTuple) when element(N, H) =:= V ->
 keyaddafter(V, N, [H|T], NewTuple) ->
     [H|keyaddafter(V, N, T, NewTuple)];
 keyaddafter(_,_, [], NewTuple) ->
+    [NewTuple]. % not found, insert at the end
+
+keyaddafter2(A, B, N, M, [H|T], NewTuple) when element(N, H) =:= A, element(M, H) =:= B ->
+    [H,NewTuple|T];
+keyaddafter2(A, B, N, M, [H|T], NewTuple) ->
+    [H|keyaddafter2(A, B, N, M, T, NewTuple)];
+keyaddafter2(_,_,_,_, [], NewTuple) ->
     [NewTuple]. % not found, insert at the end
 
 
