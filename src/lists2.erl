@@ -41,6 +41,8 @@
          clusters_to_pairs/1,
          keyaddafter/4,
          keyaddafter2/6,
+         skeyaddafter/5,
+         skeyaddafter2/7,
          cartesian/1,
          swap_pairs/1,
          is_sublist/2,
@@ -51,9 +53,18 @@
          splitwith_all/2,
          not_splitwith/2,
          keymember2/5,
+         keyfind2/5,
          keydelete2/5,
          keyreplace2/6,
-         get_value2/3]).
+         get_value2/3,
+         skeymember/4,
+         skeyfind/4,
+         skeydelete/4,
+         skeyreplace/5,
+         skeymember2/6,
+         skeyfind2/6,
+         skeydelete2/6,
+         skeyreplace2/7]).
 
 
 
@@ -576,7 +587,7 @@ sorted_to_non_unique_elements([H,H|T]) ->
     %% H is not unique
     T2 = skip_matching_head(H, T),
     [H|sorted_to_non_unique_elements(T2)];
-sorted_to_non_unique_elements([H|T]) ->
+sorted_to_non_unique_elements([_|T]) ->
     %% H is unique
     sorted_to_non_unique_elements(T);
 sorted_to_non_unique_elements([]) ->
@@ -690,6 +701,21 @@ keyaddafter2(A, B, N, M, [H|T], NewTuple) ->
 keyaddafter2(_,_,_,_, [], NewTuple) ->
     [NewTuple]. % not found, insert at the end
 
+skeyaddafter(S, V, N, [H|T], NewTuple) when tuple_size(H) =:= S, element(N, H) =:= V ->
+    [H,NewTuple|T];
+skeyaddafter(S, V, N, [H|T], NewTuple) ->
+    [H|skeyaddafter(S, V, N, T, NewTuple)];
+skeyaddafter(_,_,_, [], NewTuple) ->
+    [NewTuple]. % not found, insert at the end
+
+skeyaddafter2(S, A, B, N, M, [H|T], NewTuple)
+  when tuple_size(H) =:= S, element(N, H) =:= A, element(M, H) =:= B ->
+    [H,NewTuple|T];
+skeyaddafter2(S, A, B, N, M, [H|T], NewTuple) ->
+    [H|skeyaddafter2(S, A, B, N, M, T, NewTuple)];
+skeyaddafter2(_,_,_,_,_, [], NewTuple) ->
+    [NewTuple]. % not found, insert at the end
+
 
 %% @doc Cartesian product or all possible permutations of n-lists
 %%
@@ -769,6 +795,14 @@ keymember2(A, B, N, M, [_|T]) ->
 keymember2(_, _, _, _, []) ->
     false.
 
+%% @doc `lists:keyfind/3' for two elements
+keyfind2(A, B, N, M, [H|_]) when element(N, H) =:= A, element(M, H) =:= B ->
+    H;
+keyfind2(A, B, N, M, [_|T]) ->
+    keyfind2(A, B, N, M, T);
+keyfind2(_, _, _, _, []) ->
+    false.
+
 %% @doc `lists:keydelete/3' for two elements
 keydelete2(A, B, N, M, [H|T]) when element(N, H) =:= A, element(M, H) =:= B ->
     T;
@@ -792,3 +826,74 @@ get_value2(A, B, [_|T]) ->
     get_value2(A, B, T);
 get_value2(_, _, []) ->
     undefined.
+
+
+
+%% @doc `lists:keymember/3' with size check
+skeymember(S, A, N, [H|_]) when tuple_size(H) =:= S, element(N, H) =:= A ->
+    true;
+skeymember(S, A, N, [_|T]) ->
+    skeymember(S, A, N, T);
+skeymember(_, _, _, []) ->
+    false.
+
+%% @doc `lists:keyfind/3' with size check
+skeyfind(S, A, N, [H|_]) when tuple_size(H) =:= S, element(N, H) =:= A ->
+    H;
+skeyfind(S, A, N, [_|T]) ->
+    skeyfind(S, A, N, T);
+skeyfind(_, _, _, []) ->
+    false.
+
+%% @doc `lists:keydelete/3' with size check
+skeydelete(S, A, N, [H|T]) when tuple_size(H) =:= S, element(N, H) =:= A ->
+    T;
+skeydelete(S, A, N, [H|T]) ->
+    [H|skeydelete(S, A, N, T)];
+skeydelete(_, _, _, []) ->
+    [].
+
+%% @doc `lists:keyreplace/4' with size check
+skeyreplace(S, A, N, [H|T], New) when tuple_size(H) =:= S, element(N, H) =:= A ->
+    [New|T];
+skeyreplace(S, A, N, [H|T], New) ->
+    [H|skeyreplace(S, A, N, T, New)];
+skeyreplace(_, _, _, [], _) ->
+    [].
+
+
+%% @doc `lists:keymember/3' for two elements with size check
+skeymember2(S, A, B, N, M, [H|_])
+  when tuple_size(H) =:= S, element(N, H) =:= A, element(M, H) =:= B ->
+    true;
+skeymember2(S, A, B, N, M, [_|T]) ->
+    skeymember2(S, A, B, N, M, T);
+skeymember2(_, _, _, _, _, []) ->
+    false.
+
+%% @doc `lists:keyfind/3' for two elements with size check
+skeyfind2(S, A, B, N, M, [H|_])
+  when tuple_size(H) =:= S, element(N, H) =:= A, element(M, H) =:= B ->
+    H;
+skeyfind2(S, A, B, N, M, [_|T]) ->
+    skeyfind2(S, A, B, N, M, T);
+skeyfind2(_, _, _, _, _, []) ->
+    false.
+
+%% @doc `lists:keydelete/3' for two elements with size check
+skeydelete2(S, A, B, N, M, [H|T])
+  when tuple_size(H) =:= S, element(N, H) =:= A, element(M, H) =:= B ->
+    T;
+skeydelete2(S, A, B, N, M, [H|T]) ->
+    [H|skeydelete2(S, A, B, N, M, T)];
+skeydelete2(_, _, _, _, _, []) ->
+    [].
+
+%% @doc `lists:keyreplace/4' for two elements with size check
+skeyreplace2(S, A, B, N, M, [H|T], New)
+  when tuple_size(H) =:= S, element(N, H) =:= A, element(M, H) =:= B ->
+    [New|T];
+skeyreplace2(S, A, B, N, M, [H|T], New) ->
+    [H|skeyreplace2(S, A, B, N, M, T, New)];
+skeyreplace2(_, _, _, _, _, [], _) ->
+    [].
