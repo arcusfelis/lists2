@@ -64,7 +64,8 @@
          skeymember2/6,
          skeyfind2/6,
          skeydelete2/6,
-         skeyreplace2/7]).
+         skeyreplace2/7,
+         indexOf/2]).
 
 
 
@@ -897,3 +898,28 @@ skeyreplace2(S, A, B, N, M, [H|T], New) ->
     [H|skeyreplace2(S, A, B, N, M, T, New)];
 skeyreplace2(_, _, _, _, _, [], _) ->
     [].
+
+indexOf(Elem, List) ->
+    indexOf(Elem, List, 1).
+
+indexOf(H, [H|_], N) ->
+    N;
+indexOf(H, [_|T], N) ->
+    indexOf(H, T, N+1);
+indexOf(_, [], _) ->
+    not_found.
+
+
+-ifdef(TEST).
+
+indexOf_test_() ->
+    [?_assertEqual(1, lists2:indexOf(a, [a,b,c])),
+     ?_assertEqual(2, lists2:indexOf(b, [a,b,c])),
+     ?_assertEqual(3, lists2:indexOf(c, [a,b,c])),
+     ?_assertEqual(not_found, lists2:indexOf(d, [a,b,c])),
+     ?_assertEqual(not_found, lists2:indexOf(d, []))
+    ].
+
+-endif.
+
+

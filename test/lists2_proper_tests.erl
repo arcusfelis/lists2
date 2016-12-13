@@ -68,7 +68,6 @@ rotate_test_() ->
     [?_assertEqual(F([{1,a}, {2,b}, {3,c}]), {[1,2,3], [a,b,c]})
     ].
 
-
 %% Return a record with a highest value in the second field.
 zipper1(undefined, Y) -> Y;
 zipper1(X, undefined) -> X;
