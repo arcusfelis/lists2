@@ -494,7 +494,7 @@ desc_collate_with(KeyMaker, List) when is_function(KeyMaker, 1), is_list(List) -
 %% @doc Convert a list of tuples to a tuple of lists.
 -spec rotate(Tuples) -> Tuple when
     Tuples :: [tuple()| [tuple()]],
-    Tuple :: tuple(list()).
+    Tuple :: tuple().
 rotate([X|_]=Xs) ->
     N = tuple_size(X),
     do_rotate(N, Xs, []).
@@ -509,7 +509,7 @@ do_rotate(N, Tuples, Acc) ->
 -spec rotate(N, Tuples) -> Tuple when
     N :: non_neg_integer(),
     Tuples :: [tuple()],
-    Tuple :: tuple(list()).
+    Tuple :: tuple().
 
 rotate(N, []) ->
     list_to_tuple(lists:duplicate(N, []));
