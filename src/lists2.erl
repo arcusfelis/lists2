@@ -263,7 +263,7 @@ delete_all(_, []) -> [].
 
 %% @doc Returns a list in random order.
 shuffle(List) when is_list(List) -> 
-    WithKey = [ {random:uniform(), X} || X <- List ],
+    WithKey = [ {rand:uniform(), X} || X <- List ],
     Sorted  = lists:keysort(1, WithKey),
     keys(2, Sorted).
     
