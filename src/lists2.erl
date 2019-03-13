@@ -65,7 +65,9 @@
          skeyfind2/6,
          skeydelete2/6,
          skeyreplace2/7,
-         indexOf/2]).
+         indexOf/2,
+         pick_random/1,
+         pick_randoms/2]).
 
 
 
@@ -922,4 +924,12 @@ indexOf_test_() ->
 
 -endif.
 
+%% Return a random element from a list
+pick_random(List) ->
+    lists:nth(rand:uniform(length(List)), List).
 
+%% Return random elements from a list.
+%% Returns less elements, if list's length is shorter than Times.
+%% Do not return duplicates.
+pick_randoms(List, Times) ->
+    lists:sublist(shuffle(List), Times).
