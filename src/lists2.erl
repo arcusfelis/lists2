@@ -68,7 +68,9 @@
          skeyreplace2/7,
          indexOf/2,
          pick_random/1,
-         pick_randoms/2]).
+         pick_randoms/2,
+         bucketize/2,
+         spread/2]).
 
 
 
@@ -947,3 +949,41 @@ pick_random(List) ->
 %% Do not return duplicates.
 pick_randoms(List, Times) ->
     lists:sublist(shuffle(List), Times).
+
+%% Create chunks of size N
+bucketize(N, Records) ->
+    bucketize(N, Records, []).
+
+bucketize(N, Records, Acc) ->
+    try
+        lists:split(N, Records)
+    of
+        {Batch, Records2} ->
+            bucketize(N, Records2, [Batch | Acc])
+    catch error:badarg ->
+         {Records, lists:reverse(Acc)}
+    end.
+
+%% Spread elements into buckets one element at a time before moving to the next bucket
+spread(N, Tasks) ->
+    Buckets = lists:duplicate(N, []),
+    spread(lists:reverse(Tasks), Buckets, []).
+
+spread([Task | Tasks], [Bucket | Buckets], Acc) ->
+    spread(Tasks, Buckets, [[Task | Bucket] | Acc]);
+spread([], Buckets, Acc) ->
+   Acc ++ lists:reverse(Buckets);
+spread(Tasks, [], Acc) ->
+    spread(Tasks, lists:reverse(Acc), []).
+
+-ifdef(TEST).
+-include_lib("eunit/include/eunit.hrl").
+bucketize_test_() ->
+    [?_assertEqual({[10], [[1, 2, 3], [4, 5, 6], [7, 8, 9]]}, lists2:bucketize(3, lists:seq(1, 10)))].
+
+spread_test_() ->
+    [?_assertEqual([[1, 4, 7, 10], [2, 5, 8], [3, 6, 9]], lists2:spread(3, lists:seq(1, 10))),
+     ?_assertEqual([[1, 6], [2, 7], [3, 8], [4, 9], [5, 10]], lists2:spread(5, lists:seq(1, 10))),
+     ?_assertEqual([[1, 3, 5, 7, 9], [2, 4, 6, 8, 10]], lists2:spread(2, lists:seq(1, 10)))].
+-endif.
+
