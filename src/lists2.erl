@@ -33,6 +33,7 @@
          zip_with6/7,
          zipn/1,
          unzipn/1,
+         pairs/1,
          sorted_non_unique_elements/1,
          sorted_to_non_unique_elements/1,
          sorted_unique_elements/1,
@@ -570,6 +571,19 @@ zipn(Lists) ->
 unzipn(Tuples) ->
     rotate(Tuples).
 
+%% Create a list of pairs from a list.
+pairs([A, B|T]) ->
+    [{A, B}|pairs(T)];
+pairs([]) ->
+    [].
+
+-ifdef(TEST).
+
+pairs_test_() ->
+    [?_assertEqual([{a, b}, {c, d}], pairs([a, b, c, d]))
+    ].
+
+-endif.
 
 %% sorted_non_unique_elements([]) -> [a,d]
 sorted_non_unique_elements(List) ->
