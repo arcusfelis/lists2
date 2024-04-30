@@ -11,3 +11,5 @@ doc/README.md
 *.gcov
 *.gcda
 *.gcno
+TEST*
+_build
